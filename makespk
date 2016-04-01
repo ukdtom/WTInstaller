@@ -7,4 +7,4 @@ echo ===== making package tarball =====
 cd package ; tar cvzf ../package.tgz * ; cd ..
 
 echo ===== making spk =====
-tar cvf Webtools.spk INFO PACKAGE_ICON.PNG package.tgz scripts
+tar cvf Webtools-Synology-DSM-5.spk INFO PACKAGE_ICON.PNG package.tgz scripts
