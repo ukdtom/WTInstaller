@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Nothing to do post install except change ownership
+
+
+# Dedicated to Synology installation
+
+chown -R root.root   /var/packages/WebTools/target/* 
+
+exit 0
