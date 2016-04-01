@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+#
+# This is where the Uninstall work is done.  
+
+# We need to remove the plug-in from the Plex plug-ins directory
+
+# If there is no Plex, there's nothing to do
+synoshare --get Plex
+if [ $? -ne 0 ]
+then
+   exit 0
+fi
+
+# Ok, so Plex is still there,  Where is it and let's do our cleanup
+PLEX_LIBRARY_PATH="`synoshare --get Plex | grep Path | \
+                           awk -F\[ '{ print $2 }' | awk -F\] '{ print $1 }'`"
+
+# remove WebTools from the Plug-ins Dir
+rm -rf "$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-ins/WebTools.bundle"
+
+# remove the Synology GUI integration link if still 'running' and  present at uninstall
+rm -f /usr/syno/synoman/webman/3rdparty/WebTools
+

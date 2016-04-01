@@ -1,0 +1,5 @@
+#!/sh
+
+# Nothing to do pre upgrade.  Not supported at this time.  Must uninstall first
+
+return 1

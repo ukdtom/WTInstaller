@@ -1,0 +1,234 @@
+#!/bin/sh
+#****************************************************************
+# This will download the latest version of WebTools to either a QNAP or a Synology NAS
+# After downloading, it'll extraxt and install the plugin
+#
+# Webtools is a Plex Media Server PlugIn
+#
+# Written by dane22, a Plex Community member
+# Synology port by ChuckL, a Plex Community member
+#
+# Ver:  28.Mar.2016  - Initial Synology script  CL   -- BETA TEST 
+#****************************************************************
+#
+# Put error messages in appropriate system log / communicate back to user
+
+WriteLog() {
+
+    touch       $SYNOPKG_TEMP_LOGFILE
+    echo $*  >> $SYNOPKG_TEMP_LOGFILE
+
+}
+
+GetHostType() {
+ 
+# define the main flags
+
+HOSTYPE=0
+
+    HOSTTYPE=2   # SYNO
+    CURL=/usr/bin/curl
+    TAR=/bin/tar
+    UNZIP=/usr/syno/bin/unzip
+    PKGDIR=/var/packages/WebTools
+
+  return 0
+
+}
+
+GetDestination() {
+
+    # On Synology,  the Pre-install script will have been run to determine if Plex is
+    # installed.  It will error if not.
+
+    PMSFULLPATH="`synoshare --get Plex | grep Path | awk -F\[ '{ print $2 }' \
+                                                   | awk -F\] '{ print $1 }'`"
+
+    WEBTOOLS_DIR="$PKGDIR/target"
+
+  # Now build the Plug-in directory
+
+  PLUGIN_DIR="$PMSFULLPATH/Library/Application Support/Plex Media Server/Plug-ins"
+
+  # Which release.   Release info for WebTools on Github
+  RELEASE_LINK="https://api.github.com/repos/dagalufh/WebTools.bundle/releases/latest" 
+
+}
+
+######################################################################
+# Get latest release download link, and download that
+######################################################################
+downloadWT(){
+	# Let's start by finding the browser_download_url
+	# Sadly, QNAP can not nativly extract the download binary, so we instead need to fetch the tarball
+
+echo DownloadWT
+        # That again means, that QNAP'ers using this is not counted :-(
+#	DownloadURL=$(/sbin/curl -Lsk $RELEASE_LINK |grep 'browser_download_url')
+#       DownloadURL=$(/sbin/curl -Lsk $RELEASE_LINK |grep 'tarball_url')
+	DownloadURL="`$CURL -Lsk $RELEASE_LINK |grep 'tarball_url'`"
+
+	# Strip start part of line
+	DownloadURL="`echo $DownloadURL | sed -e 's/"tarball_url": "//'`"
+
+	
+        # Strip end part of the response
+        DownloadURL="`echo $DownloadURL | sed -e 's/..$//'`"
+
+#echo FINAL DownloadURL = $DownloadURL
+
+	/sbin/log_tool -t 0 -a "About to download the file $DownloadURL"
+        WriteLog "About to download the file $DownloadURL" 
+#echo DownloadURL = \[$DownloadURL\]
+	# Download the darn thingy
+	$CURL -Lsk $DownloadURL -o "$PLUGIN_DIR/wt.tar.gz"
+	if [ $? -ne 0 ]; then
+          return $? 
+        fi
+
+}
+
+######################################################################
+# Create WT dir if missing, and then extract. remove tarball afterwards
+######################################################################
+extractWT(){
+
+#echo extractWT: mkdir $PLUGIN_DIR/WebTools.bundle >> /vol1/tmp/SYNO_TEMP_LOGFILE
+
+	mkdir -p "$PLUGIN_DIR/WebTools.bundle"
+        $TAR -xf "$PLUGIN_DIR/wt.tar.gz" --overwrite --strip 1 -C "$PLUGIN_DIR/WebTools.bundle"
+        rm "$PLUGIN_DIR/wt.tar.gz"
+#	$UNZIP -oq "$PLUGIN_DIR/wt.zip" -d "$PLUGIN_DIR/WebTools.bundle"
+
+
+        # On Synology,  set ownership to plex, not root.
+        chown -R plex:users "$PLUGIN_DIR/WebTools.bundle"
+        find "$PLUGIN_DIR" -type f -exec chmod 644 {} \;
+        find "$PLUGIN_DIR" -type d -exec chmod 755 {} \;
+
+        
+}
+
+######################################################################
+# Main code
+######################################################################
+
+#echo Calling start-stop-status from `pwd`  with $* >> /volume1/tmp/SYNO_TEMP_LOGFILE
+
+  # Figure out which host type
+  GetHostType
+
+  # Setup for the proper destination
+  GetDestination
+
+
+#echo PLUGIN_DIR = \"$PLUGIN_DIR\"
+
+# IsLoaded ($Plugin-Dir/.isloaded) is present after successful download & unpack
+# IsRunning ($Plugin-Dir/.isrunning) is a fake state flag to make machines like Synology happy
+
+
+  # Is WebTools loaded on this system
+  if [ -f "$PLUGIN_DIR/Webtools.bundle/.isloaded" ]; then
+    ISLOADED=1
+  fi
+
+  # Is WebTools currently 'running' based on host 'start/stop' commands.
+  # (independent of what Plex actually does with it)
+  if [ -f "$PLUGIN_DIR/Webtools.bundle/.isrunning" ]; then
+    ISRUNNING=1
+  fi
+
+
+# What were we asked to do
+  case "$1" in
+    start)
+
+      # Only do this if not 'loaded' (download and extract)
+      if [ ! $ISLOADED ]; then 
+
+    
+        if [ ! -d "$PLUGIN_DIR/WebTools.bundle" ]; then
+          downloadWT
+          if [ $? -ne 0 ]; then
+            WriteLog  Error $? "while downloading WebTools package"
+            exit $?
+          else
+            extractWT
+            if [ $? -ne 0 ]; then
+              WriteLog  Error $? "while installing WebTools package in Plex Media Server"
+              exit $?
+            else
+
+              # No errors downloading or extracting, so must be loaded :-)
+              # Mark as loaded
+              touch "$PLUGIN_DIR/WebTools.bundle/.isloaded"
+            fi
+          fi
+
+        fi # Webtools.bundle doesn't exist
+
+
+
+        # Mark as loaded
+        ISLOADED=1
+        touch "$PLUGIN_DIR/WebTools.bundle/.isloaded"
+
+
+      fi
+
+      # Now mark it as Running
+      if [ $ISLOADED ]; then
+
+        touch "$PLUGIN_DIR/WebTools.bundle/.isrunning"
+
+        # Create the DSM shortcut (Puts the icon on the menu)
+        if [ ! -f "/usr/syno/synoman/webman/3rdparty/WebTools" ]
+        then
+            ln -s "/var/packages/WebTools/target/dsm_config/WebTools" /usr/syno/synoman/webman/3rdparty
+        fi
+      fi
+      exit 0
+    ;;
+
+  stop)
+    
+    rm -f "$PLUGIN_DIR/WebTools.bundle/.isrunning"
+
+
+    # Remove the Start Menu link
+    rm -f /usr/syno/synoman/webman/3rdparty/WebTools
+
+    exit 0    # Synology now 'Not Running'
+    ;;
+
+  status)
+
+    # Give the other processors time to catch up
+    sleep 2
+
+    if [ ! -f "$PLUGIN_DIR/WebTools.bundle/.isrunning" ]; then
+      WriteLog  Status:  WebTools is installed but not running.
+      exit 1  # is not running
+    fi
+
+    exit 0  # is running
+
+    ;;
+ 
+  restart)
+    $0 stop
+    if [ $? -ne 0]; then
+      exit $?
+    fi
+
+    $0 start
+    exit $?
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+esac
+
+exit 0
