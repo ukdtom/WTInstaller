@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+#  Preinstallation script for Plex Plug-in Packages.
+#
+#  This initial version is for Synology servers, DSM 5.0 or higher
+#
+#  27.Mar.2016   Chuck L.
+
+
+# Verify Plex is installed
+
+# Check for Plex's username
+synouser --get plex
+if [ $? -ne 0 ]
+then
+    # No Plex user,  error
+    echo "Plex Media Server must be installed prior to installing WebTools" \
+          >> $SYNOPKG_TEMP_LOGFILE
+    exit 1
+fi
+
+# Check for Plex's (data) Library
+synoshare --get Plex
+if [ $? -ne 0 ]
+then
+    # Plex share is missing, Previous install not valid
+    echo "Plex Media Server Library missing.  Please reinstall Plex before continuing." \
+                                    >> $SYNOPKG_TEMP_LOGFILE
+    exit 1
+fi
+
+
+# Now get Plex's share name and build from that
+export PLEX_LIBRARY_PATH="`synoshare --get Plex | grep Path | \
+                           awk -F\[ '{ print $2 }' | awk -F\] '{ print $1 }'`"
+
+PLUGIN_DIR="$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-ins"
+
+# If Plug-in Dir not present, something happened to Plex's entire Library, Do not continue
+if [ ! -d "$PLUGIN_DIR"  ]; then
+
+   echo "Plex's Library is corrupted or missing.  Please reinstall Plex and recreate the library."\
+         >> $SYNOPKG_TEMP_LOGFILE
+   exit 1
+
+fi
+
+
+exit 0
+    

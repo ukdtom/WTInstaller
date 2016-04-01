@@ -1,0 +1,9 @@
+package="WebTools"
+description="WebTools helps manage your Plex Media Server and its plug-in modules."
+maintainer="dagalufh and ukdtom"
+adminport=33400
+adminurl=""
+firmware=5.0-4458
+helpurl="https://plex.tv/"
+version=2.1
+arch="x86 cedarview bromolow evansport avoton braswell"

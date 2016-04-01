@@ -1,0 +1,14 @@
+{
+   ".url": {
+     "com.plex.WebTools": {
+       "title": "WebTools",
+       "desc": "",
+       "icon": "WebTools-{0}.png",
+       "type": "url",
+       "protocol": "http",
+       "port": "33400",
+       "url": "/login",
+       "allUsers": true
+      }
+    }
+}
