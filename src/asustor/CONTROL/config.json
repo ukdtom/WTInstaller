@@ -1,10 +1,10 @@
 {
     "adm-desktop": {
         "app": {
-            "port": 32400,
+            "port": 33400,
             "protocol": "http",
             "type": "custom",
-            "url": "/web"
+            "url": "/"
         },
         "privilege": {
             "accessible": "administrators",
