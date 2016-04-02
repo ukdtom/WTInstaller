@@ -1,0 +1,26 @@
+{
+    "adm-desktop": {
+        "app": {
+            "port": 32400,
+            "protocol": "http",
+            "type": "custom",
+            "url": "/web"
+        },
+        "privilege": {
+            "accessible": "administrators",
+            "customizable": true
+        }
+    },
+   "general":{
+      "package":"Asustor-Inst-WebTools",
+      "name":"WebTools for Plex Installer",
+      "version":"1.0.0",
+      "depends":[],
+      "conflicts":[],
+      "developer":"dane22, a Plex community member",
+      "maintainer":"dane22",
+      "website":"https://github.com/ukdtom/WTInstaller",
+      "architecture":"any",
+			"firmware":"2.0"   
+   }
+}
