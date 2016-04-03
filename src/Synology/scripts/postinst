@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# WebTools Firewall configuration settings installation for Synology
+# WebTools - Initial download and firewall configuration settings installation for Synology
 #
 #
 # by ChuckPa, a Plex Community member
@@ -8,14 +8,134 @@
 # Ver 1.0 - Initial release
 
 
-# Dedicated to Synology installation
+# Put error messages in appropriate system log / communicate back to user
 
-/bin/chown -R root:root   /var/packages/WebTools/*
+WriteLog() {
+
+    touch       "$LOGFILE"
+    echo `date -Iseconds` $*  >> "$LOGFILE"
+#	/sbin/log_tool -t 0 -a "$*"
+
+}
+
+GetHostType() {
+ 
+# define the main flags
+
+HOSTYPE=0
+
+    HOSTTYPE=2   # SYNO
+    CURL=/usr/bin/curl
+    TAR=/bin/tar
+    UNZIP=/usr/syno/bin/unzip
+    PKGDIR=/var/packages/WebTools
+
+  return 0
+
+}
+
+GetDestination() {
+
+    # On Synology,  the Pre-install script will have been run to determine if Plex is
+    # installed.  It will error if not.
+
+    PMS_DIR="`synoshare --get Plex | grep Path | awk -F\[ '{ print $2 }' \
+                                                   | awk -F\] '{ print $1 }'`"
+
+    WEBTOOLS_DIR="$PKGDIR/target"
+
+  # Now build the Plug-in directory
+
+  PLUGIN_DIR="$PMS_DIR/Library/Application Support/Plex Media Server/Plug-ins"
+
+  # The Logfile (just in case)
+  LOGFILE="$PLUGIN_DIR/WebTools.log"
+
+  # Which release.   Release info for WebTools on Github
+  RELEASE_LINK="https://api.github.com/repos/dagalufh/WebTools.bundle/releases/latest" 
+
+}
+
+######################################################################
+# Get latest release download link, and download that
+######################################################################
+downloadWT(){
+	# Let's start by finding the browser_download_url
+	# we will use the tarball directly for now.  (keep both here)
+
+        # That again means, that QNAP'ers using this is not counted :-(
+#	DownloadURL=$(/sbin/curl -Lsk $RELEASE_LINK |grep 'browser_download_url')
+#       DownloadURL=$(/sbin/curl -Lsk $RELEASE_LINK |grep 'tarball_url')
+	DownloadURL="`$CURL -Lsk $RELEASE_LINK |grep 'tarball_url'`"
+
+	# Strip start part of line
+	DownloadURL="`echo $DownloadURL | sed -e 's/"tarball_url": "//'`"
+
+	
+        # Strip end part of the response
+        DownloadURL="`echo $DownloadURL | sed -e 's/..$//'`"
+
+
+        WriteLog "Webtools completing download and installation" 
+
+#echo DownloadURL = \[$DownloadURL\]
+
+	# Download the darn thingy
+	$CURL -Lsk $DownloadURL -o "$PLUGIN_DIR/wt.tar.gz"
+	if [ $? -ne 0 ]; then
+          WriteLog Error $? while downloading WebTools
+          return $? 
+        fi
+
+        #WriteLog WebTools download complete
+
+}
+
+######################################################################
+# Create WT dir if missing, and then extract. remove tarball afterwards
+######################################################################
+extractWT(){
+
+#echo extractWT: mkdir $PLUGIN_DIR/WebTools.bundle >>  $LOGFILE
+
+	mkdir -p "$PLUGIN_DIR/WebTools.bundle"
+        $TAR -xf "$PLUGIN_DIR/wt.tar.gz" --overwrite --strip 1 -C "$PLUGIN_DIR/WebTools.bundle"
+
+        rm -f "$PLUGIN_DIR/wt.tar.gz"
+#	$UNZIP -oq "$PLUGIN_DIR/wt.zip" -d "$PLUGIN_DIR/WebTools.bundle"
+
+
+        # On Synology,  set ownership to plex, not root.
+        chown -R plex:users "$PLUGIN_DIR/WebTools.bundle"
+        find "$PLUGIN_DIR" -type f -exec chmod 644 {} \;
+        find "$PLUGIN_DIR" -type d -exec chmod 755 {} \;
+
+        
+}
+
+#######################################################################
+
+# Get the host type and Destination directories then download and install WebTools into Plex
+
+GetHostType
+GetDestination
+
+# Download and extract
+downloadWT
+extractWT
+
+# Mark as loaded
+touch "$PLUGIN_DIR/WebTools.bundle/.isloaded"
+
+# Make certain the files in /var/packages are owned by root 
+chown -R root:root   /var/packages/WebTools
+
 
 # Add description of firewall ports to DSM's firewall built-in application list
-
 /usr/syno/bin/servicetool --install-configure-file --package /var/packages/WebTools/target/WebTools.sc
-
+if [ $? -eq 0 ]; then
+  WriteLog WebTools firewalls rules definition installed
+fi
 
 
 exit 0

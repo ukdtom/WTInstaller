@@ -19,12 +19,16 @@ PLEX_LIBRARY_PATH="`synoshare --get Plex | grep Path | \
                            awk -F\[ '{ print $2 }' | awk -F\] '{ print $1 }'`"
 
 # remove WebTools from the Plug-ins Dir
-rm -rf "$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-ins/WebTools.bundle"
 
-# remove the Synology GUI integration link if still 'running' and  present at uninstall
+## From PR 3-Apr-2016,  Leave Firewall description intact since WebTools.bundle stays
+#rm -rf "$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-ins/WebTools.bundle"
+
+# Remove the ".isrunning" flag (Synology has no further hooks into Webtools)
+rm -f "$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-ins/WebTools.bundle/.isrunning"
+
+# remove the Synology GUI integration link (This is required to avoid a mess)
 rm -f /usr/syno/synoman/webman/3rdparty/WebTools
 
+
 # Remove the built-in firewall settings
-/usr/syno/bin/servicetool --remove-configure-file --package WebTools.sc
-
-
+/usr/syno/bin/servicetool --remove-configure-file --package /var/packages/WebTools/target/WebTools.sc
