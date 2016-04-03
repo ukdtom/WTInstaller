@@ -1,10 +1,21 @@
 #!/bin/sh
-
-# Nothing to do post install except change ownership
+#
+# WebTools Firewall configuration settings installation for Synology
+#
+#
+# by ChuckPa, a Plex Community member
+#
+# Ver 1.0 - Initial release
 
 
 # Dedicated to Synology installation
 
-chown -R root.root   /var/packages/WebTools/target/* 
+/bin/chown -R root:root   /var/packages/WebTools/*
+
+# Add description of firewall ports to DSM's firewall built-in application list
+
+/usr/syno/bin/servicetool --install-configure-file --package /var/packages/WebTools/target/WebTools.sc
+
+
 
 exit 0

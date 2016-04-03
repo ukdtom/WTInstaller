@@ -6,9 +6,10 @@
 # Webtools is a Plex Media Server PlugIn
 #
 # Written by dane22, a Plex Community member
-# Synology port by ChuckL, a Plex Community member
+# Synology port by ChuckPa, a Plex Community member
 #
 # Ver:  28.Mar.2016  - Initial Synology script  CL   -- BETA TEST 
+# Ver:  02.Apr.2016  - Augmented for final release CL 
 #****************************************************************
 #
 # Put error messages in appropriate system log / communicate back to user
@@ -77,8 +78,8 @@ echo DownloadWT
 
 #echo FINAL DownloadURL = $DownloadURL
 
-	/sbin/log_tool -t 0 -a "About to download the file $DownloadURL"
-        WriteLog "About to download the file $DownloadURL" 
+#	/sbin/log_tool -t 0 -a "About to download the file $DownloadURL"
+        WriteLog "Webtools completing download and installation" 
 #echo DownloadURL = \[$DownloadURL\]
 	# Download the darn thingy
 	$CURL -Lsk $DownloadURL -o "$PLUGIN_DIR/wt.tar.gz"
