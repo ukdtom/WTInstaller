@@ -1,11 +1,11 @@
 #!/bin/sh
 #
-#  Preinstallation script for Plex Plug-in Packages.
+# Preinstallation script for WebTools on Synology DSM
 #
-#  This initial version is for Synology servers, DSM 5.0 or higher
+# by ChuckPa, a Plex Community member
 #
-#  27.Mar.2016   Chuck L.
-
+# Ver 1.0 - Initial release
+  
 
 # Verify Plex is installed
 
