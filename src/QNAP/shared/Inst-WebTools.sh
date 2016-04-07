@@ -60,7 +60,7 @@ case "$1" in
 	/sbin/log_tool -t 0 -a "Starting $QPKG_NAME from $DIR"
 	downloadWT
 	extractWT
-	@/sbin/setcfg PlexInst Enable FALSE -f /etc/config/qpkg.conf
+	/sbin/setcfg PlexInst Enable FALSE -f /etc/config/qpkg.conf
     ;;
 
   stop)
