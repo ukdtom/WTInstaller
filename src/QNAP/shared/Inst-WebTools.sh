@@ -9,7 +9,7 @@
 #****************************************************************
 
 CONF=/etc/config/qpkg.conf			# conf file for all qpkg's
-QPKG_NAME="Inst-WebTools"				# name of this file
+QPKG_NAME="QNAP-WT-Install"				# name of this file
 TARGETAPP='Plex Media Server'			# name of the target application
 PMSFULLPATH=$(getcfg -f $CONF 'PlexMediaServer' Install_path)			# Install dir of PMS
 PLUGIN_DIR="$PMSFULLPATH/Library/Plex Media Server/Plug-ins"

@@ -34,6 +34,8 @@
 #CMD_WLOG="/sbin/write_log"
 #CMD_XARGS="/usr/bin/xargs"
 #CMD_7Z="/usr/local/sbin/7z"
+## Path to ipkg or opkg package tool if installed.
+#CMD_PKG_TOOL=
 #
 ###### System definitions #####
 #SYS_EXTRACT_DIR="$(pwd)"
@@ -62,7 +64,6 @@
 #SYS_QPKG_CONF_FIELD_SERVICEPORT="Service_Port"
 #SYS_QPKG_CONF_FIELD_SERVICE_PIDFILE="Pid_File"
 #SYS_QPKG_CONF_FIELD_AUTHOR="Author"
-#SYS_QPKG_CONF_FIELD_RC_NUMBER="RC_Number"
 ## The following variables are assigned values at run-time.
 #SYS_HOSTNAME=$($CMD_HOSTNAME)
 ## Data file name (one of SYS_QPKG_DATA_FILE_GZIP, SYS_QPKG_DATA_FILE_BZIP2,
@@ -75,9 +76,7 @@
 ## Location of installed software.
 #SYS_QPKG_DIR=""
 ## If the QPKG should be enabled or disabled after the installation/upgrade.
-SYS_QPKG_SERVICE_ENABLED="enabled"
-## Architecture of the device the QPKG is installed on.
-#SYS_CPU_ARCH=""
+#SYS_QPKG_SERVICE_ENABLED=""
 ## Name and location of system shares
 #SYS_PUBLIC_SHARE=""
 #SYS_PUBLIC_PATH=""
@@ -91,8 +90,6 @@ SYS_QPKG_SERVICE_ENABLED="enabled"
 #SYS_USB_PATH=""
 #SYS_WEB_SHARE=""
 #SYS_WEB_PATH=""
-## Path to ipkg or opkg package tool if installed.
-#CMD_PKG_TOOL=
 #
 ######################################################################
 # All package specific functions shall call 'err_log MSG' if an error
@@ -136,6 +133,6 @@ SYS_QPKG_SERVICE_ENABLED="enabled"
 #pkg_install(){
 #}
 #
-pkg_post_install(){
-CMD_LOG_TOOL -t 1 -a "All done....Enable to download and install the latest WebTools for Plex Media Server"
-}
+#pkg_post_install(){
+#}
+
