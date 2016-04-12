@@ -6,4 +6,5 @@ adminurl=""
 firmware=5.0-4458
 helpurl="https://plex.tv/"
 version=2.1
-arch="x86 cedarview bromolow evansport avoton braswell"
+arch="noarch"
+install_dep_packages="Plex Media Server"
