@@ -5,6 +5,4 @@ adminport=33400
 adminurl=""
 firmware=5.0-4458
 helpurl="https://plex.tv/"
-version=2.1
-arch="noarch"
-install_dep_packages="Plex Media Server"
+version=1.1
