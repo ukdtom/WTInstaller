@@ -1,1 +1,3 @@
-return 0
+#!/bin/sh
+/usr/syno/bin/servicetool --remove-configure-file --package WebTools.sc
+exit 0

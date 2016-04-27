@@ -1,5 +1,57 @@
-#!/sh
+#!/bin/sh
+#
+# Preupgrade
+#
+# First we must find out where Plex is (which volume)
+#================================================================
+SetHostType() {
+ 
+  # define the main flags & location variables for needed commands
+ 
+  # Location of the needed executables if not in standard locations
+  CURL=/usr/bin/curl
+  TAR=/bin/tar
+  UNZIP=/usr/syno/bin/unzip
+  
+  # where the package is located
+  PKGDIR=/var/packages/WebTools
 
-# Nothing to do pre upgrade.  Not supported at this time.  Must uninstall first
+ return 0
+   
+}
+   
+GetDestination() {
+   
+  # On Synology,  the Pre-install script determines if Plex is present and ok to use ($PMS_DIR)
+   
+  PMS_DIR="`synoshare --get Plex | grep Path | awk -F\[ '{ print $2 }' \
+  | awk -F\] '{ print $1 }'`"
+  
+  # Now build the Plug-in directory
+  PLUGIN_DIR="$PMS_DIR/Library/Application Support/Plex Media Server/Plug-ins"
+  
+  # Our default Logfile
+  LOGFILE="$PLUGIN_DIR/WebTools.log"
+  
+  # Which release.   Release info for WebTools on Github
+  RELEASE_LINK="https://api.github.com/repos/dagalufh/WebTools.bundle/releases/latest" 
+  
+}
 
-return 1
+# ------------------------------ Main routine -------------------------------
+
+SetHostType
+GetDestination 
+
+# PMS_DIR has where the .pid file is if Plex is running
+if [ -f "$PMS_DIR/plexmediaserver.pid" ]; then
+  touch /usr/local/plex_running
+fi
+
+# make sure the firewall definitions are gone
+/usr/syno/bin/servicetool --remove-configure-file --package WebTools.sc
+/usr/syno/bin/servicetool --remove-configure-file --build-in WebTools.sc
+
+touch /usr/local/webtools_upgrade
+
+exit 0

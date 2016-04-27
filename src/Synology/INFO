@@ -1,8 +1,8 @@
 package="WebTools"
-description="WebTools helps manage your Plex Media Server and its plug-in modules."
+description="WebTools helps manage your Plex Media Server and its plug-in modules.  This package installs the latest version of WebTools which you then administer from within WebTools.  If you uninstall this package, WebTools will be removed from Plex.  Caution:  If Plex is running,  it will be stopped momentarily.  This ensures everything works as it should."
 maintainer="dagalufh and ukdtom"
 adminport=33400
 adminurl=""
-firmware=5.0-4458
+firmware=5.2-5644
 helpurl="https://plex.tv/"
-version=1.1
+version=1.3

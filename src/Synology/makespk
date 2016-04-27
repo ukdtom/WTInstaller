@@ -1,10 +1,18 @@
-#
-
+#!/bin/sh
+# Makespk - create Synology binary distribution package for WebTools
 
 # Make the package tar ball first
+VER="1.2"
 
-echo ===== making package tarball =====
-cd package ; tar cvzf ../package.tgz * ; cd ..
+echo ===== making $VER package tarball =====
+cd package
+tar cvzf ../package.tgz *
+cd ..
 
-echo ===== making spk =====
-tar cvf Synology_Inst-WebTools_1.1.spk INFO PACKAGE_ICON.PNG package.tgz scripts
+echo ===== making $VER spk =====
+tar cvf Synology_Inst-WebTools_$VER.spk INFO PACKAGE_ICON.PNG package.tgz scripts/pre* scripts/post* scripts/start*
+
+echo ===== moving version $VER spk to bin directory =====
+mv Synology_Inst-WebTools_$VER.spk ../../bin/synology
+cp Release_Notes.txt               ../../bin/synology
+
