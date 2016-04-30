@@ -1,4 +1,4 @@
-!/bin/sh 
+#!/bin/sh 
 #
 # postinst:
 #
@@ -93,7 +93,7 @@ downloadWT(){
     
     
   # Download the darn thingy
-  $CURL -Lsk $DownloadURL -o "$PLUGIN_DIR/wt.tar.gz"
+  $CURL -Lsk $DownloadURL -m 15 -o "$PLUGIN_DIR/wt.tar.gz"
   if [ $? -ne 0 ]; then
     WriteLog Error $? while downloading WebTools
     WriteSyno ERROR $? while downloading WebTools
@@ -168,7 +168,7 @@ PlexRunning=0
 # Determine if Install or Upgrade
 if [ -f "/usr/local/webtools_upgrade" ]; then
   IsUpgrade=1
-  WriteLog "Previous version detected.  Upgrade/Overwrite forced."
+  WriteLog "Previous version detected.  Upgrade forced."
 fi
 
 # Determine if Plex is running or not
@@ -176,21 +176,17 @@ if [ -f "$PMS_DIR/Library/Application Support/Plex Media Server/plexmediaserver.
   PlexRunning=1
 fi        
 
-# If Plex running and this is an upgrade,  stop Plex
-if [ $IsUpgrade -eq 1 -a $Plexrunning -eq 1 ]; then
-  /usr/syno/bin/synopkg stop "Plex Media Server"
-fi;
-        
-until [ $Retries -gt 5 -o $Downloaded -eq 1 ]; do
+# Loop until retries exhausted or downloaded        
+until [ $Retries -gt 3 -o $Downloaded -eq 1 ]; do
         
   # Try the download 
   downloadWT
   
   # Check the return
   if [ $? -ne 0 ]; then
-    retries=`expr $retries + 1`
-    WriteLog "ERROR: Cannot download WT from GitHub, sleeping 10 sec. Retry \# $retries"
-    sleep 10
+    Retries=`expr $Retries + 1`
+    WriteLog "ERROR: Cannot download WT from GitHub, sleeping 5 sec. Retry \# $Retries"
+    sleep 5
         
   else
     Downloaded=1
@@ -209,14 +205,9 @@ if [ $Downloaded -eq 1 ]; then
   
 else
 
-  MSG="ERROR: Unable to download WebTools after $retries retries.  Installation failure."
+  MSG="ERROR: Unable to download WebTools after $Retries retries.  Installation failure."
   WriteSyno "$MSG"
   WriteLog  "$MSG"
-
-  # If Plex was running, restart it
-  if [$IsUpgrade -eq 1 -a $PlexRunning -eq 1 ]; then
-    /usr/syno/bin/synopkg start "Plex Media Server"
-  fi
 
   exit 1
 
@@ -233,11 +224,6 @@ if [ $? -ne 0 ]; then
   WriteSyno "$MSG"
   WriteLog "$MSG"
 
-  # If Plex was running, restart it
-  if [$IsUpgrade -eq 1 -a $PlexRunning -eq 1 ]; then
-    /usr/syno/bin/synopkg start "Plex Media Server"
-  fi
-
   exit 1
 fi
       
@@ -250,7 +236,7 @@ fi
       
       
   # If upgrade, force remove firewall descriptions before upgrading (should already be gone)
-  if [ $ISUPGRADE ]; then
+  if [ $IsUpgrade -eq 1 ]; then
     WriteLog Removing previous firewall definitions
     /usr/syno/bin/servicetool --remove-configure-file --package WebTools.sc
   fi
@@ -262,11 +248,6 @@ fi
     WriteLog New firewall rules definition installed
   fi
 
-  # If an upgrade,  restart Plex
-  if [$IsUpgrade -eq 1 -a $PlexRunning -eq 1 ]; then
-    /usr/syno/bin/synopkg start "Plex Media Server"
-  fi
-        
   WriteLog  WebTools installation complete.
   WriteLog  " "
         

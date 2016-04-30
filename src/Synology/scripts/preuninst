@@ -14,25 +14,25 @@
 
 # If there is no Plex, skip over the Plex stuff
 synoshare --get Plex
-if [ $? -ne 0 ]; then
+if [ $? -eq 0 ]; then
 
   # Ok, so Plex is still there,  Where is it and let's do our cleanup
-  PLEX_LIBRARY_PATH="`synoshare --get Plex | grep Path | \
+  PMS_DIR="`synoshare --get Plex | grep Path | \
                            awk -F\[ '{ print $2 }' | awk -F\] '{ print $1 }'`"
 
   # remove WebTools from the Plug-ins Dir (Complete Synology-style uninstall)
-  rm -rf "$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-ins/WebTools.bundle"
+  rm -rf "$PMS_DIR/Library/Application Support/Plex Media Server/Plug-ins/WebTools.bundle"
 
   # Remove the cache directory
-  rm -rf "$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-in Support/CCaches/com.plexapp.plugins.WebTools"
+  rm -rf "$PMS_DIR/Library/Application Support/Plex Media Server/Plug-in Support/Caches/com.plexapp.plugins.WebTools"
 
   # Remove the Data directory
-  rm -rf "$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-in Support/Data/com.plexapp.plugins.WebTools"
+  rm -rf "$PMS_DIR/Library/Application Support/Plex Media Server/Plug-in Support/Data/com.plexapp.plugins.WebTools"
 
   # remove the Synology GUI integration link (This is required to avoid a mess)
   rm -f /usr/syno/synoman/webman/3rdparty/WebTools
 
-  LOG="$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-ins/WebTools.log"
+  LOG="$PMS_DIR/Library/Application Support/Plex Media Server/Plug-ins/WebTools.log"
 
 fi
 
@@ -43,7 +43,7 @@ fi
 /usr/syno/bin/servicetool --remove-configure-file --build-in WebTools
 
 # Log the removal if Plex present
-if [ -d "$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plug-ins" ]; then
+if [ -d "$PMS_DIR/Library/Application Support/Plex Media Server/Plug-ins" ]; then
   echo `date +"%Y-%m-%e %H.%M.%S %Z"`: WebTools uninstalled >> "$LOG"
 fi
 

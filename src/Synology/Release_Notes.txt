@@ -5,7 +5,7 @@
 Release Notes:
 ----------------
 
-Ver 1.3  - 27 April 2016
+Ver 1.3  - 29 April 2016
 
    - Fixes:
 
@@ -24,7 +24,11 @@ Ver 1.3  - 27 April 2016
 
    - Limitations:
 
-     1.  Plex must be stopped to upgrade.  This how how Plex works.
+     1.  Occasionally Package Center sits and spins after installation complete.
+         Refreshing your browser window and opening Package Center
+         should show it's already installed.  If not,  Restart DSM.
+
+         This is due to Synology UI  - Browser interaction.  
 
 
    - Improvements:
@@ -34,12 +38,15 @@ Ver 1.3  - 27 April 2016
 
 
      2.  Downloading WebTools from GitHub more tolerant of network delay.  
-         Will retry 5 times (10 seconds each) before installation abort.
+         Will retry 3 times (20 seconds each) before installation abort.
+
+         Package Center will show 'installing' during this time.  It will report
+         final status upon completion.
 
      3.  WebTools.log contains more descriptive error messages
 
 
-   - Tested on:
+   - Tested and verified on:
 
      1.  DSM 5.2-5644 Update 5
      2.  DSM 6.0-7321 Update 3

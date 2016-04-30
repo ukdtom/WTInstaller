@@ -52,6 +52,9 @@ fi
 /usr/syno/bin/servicetool --remove-configure-file --package WebTools.sc
 /usr/syno/bin/servicetool --remove-configure-file --build-in WebTools.sc
 
-touch /usr/local/webtools_upgrade
+if [ -d "$PLUGIN_DIR/WebTools.bundle" ]; then
+  touch /usr/local/webtools_upgrade
+fi
+
 
 exit 0
