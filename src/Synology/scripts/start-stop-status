@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************
-# This will download the latest version of WebTools to either a QNAP or a Synology NAS
-# After downloading, it'll extraxt and install the plugin
+# Control WebTools  Start, Stop and report Status to Synology
+#
+# Actual downloading and installation is done in postinst (after the package is placed
+# at its runtime location by Synology)
 #
 # Webtools is a Plex Media Server PlugIn
 #
@@ -10,6 +12,8 @@
 #
 # Ver:  28.Mar.2016  - Initial Synology script  CL   -- BETA TEST 
 # Ver:  02.Apr.2016  - Augmented for final release CL 
+# Ver:  23.Apr.2016  - Update to ver 1.2,  Support DSM 5.2 & 6.0 U3 
+#                      Improve error message in log if WebTools corrupt/missing
 #****************************************************************
 #
 # Support functions first
@@ -20,38 +24,18 @@
 WriteLog() {
 
     touch       "$LOGFILE"
-    echo `date -Iseconds` : $*  >> "$LOGFILE"
+    echo `date +"%Y-%m-%e %H.%M.%S %Z"`: $*  >> "$LOGFILE"
 
 }
 
-# Determine Host type (Synology / QNAP / Asustor)  .. this is future use
-#  It defines variables to point to those utilities which NAS vendors love to move around
-#
-
-GetHostType() {
- 
-# define the main flags
-HOSTYPE=0
-
-    HOSTTYPE=2   # SYNO
-    CURL=/usr/bin/curl
-    TAR=/bin/tar
-    UNZIP=/usr/syno/bin/unzip
-    PKGDIR=/var/packages/WebTools
-
-  return 0
-
-}
 
 GetDestination() {
 
-    # On Synology,  the Pre-install script will have been run to determine if Plex is
-    # installed.  It will error if not.
+  # On Synology,  the Pre-install script will have been run to determine if Plex is
+  # installed.  It will error if not.
 
-    PMS_DIR="`synoshare --get Plex | grep Path | awk -F\[ '{ print $2 }' \
+  PMS_DIR="`synoshare --get Plex | grep Path | awk -F\[ '{ print $2 }' \
                                                | awk -F\] '{ print $1 }'`"
-
-    WEBTOOLS_DIR="$PKGDIR/target"
 
   # Now build the Plug-in directory
 
@@ -61,65 +45,65 @@ GetDestination() {
   LOGFILE="$PLUGIN_DIR/WebTools.log"
 
 
-  # Which release.   Release info for WebTools on Github
-  RELEASE_LINK="https://api.github.com/repos/dagalufh/WebTools.bundle/releases/latest" 
-
 }
 
 #################################### Main Routine ########################################
 
-#echo Calling start-stop-status from `pwd`  with $* >> /volume1/tmp/SYNO_TEMP_LOGFILE
-
-  # Figure out which host type
-  GetHostType
 
   # Setup for the proper destination
   GetDestination
 
 
 # IsLoaded ($Plugin-Dir/.isloaded) is present after successful download & unpack
-# IsRunning ($Plugin-Dir/.isrunning) is a fake state flag to make machines like Synology happy
+# IsRunning ($Plugin-Dir/.isrunning) is state flag to make machines like Synology happy
 
+  IsLoaded=0
+  IsRunning=0
 
   # Is WebTools loaded on this system
   if [ -f "$PLUGIN_DIR/WebTools.bundle/.isloaded" ]; then
-    ISLOADED=1
+    IsLoaded=1
   fi
 
   # Is WebTools currently 'running' based on host 'start/stop' commands.
   # (independent of what Plex actually does with it)
   if [ -f "$PLUGIN_DIR/WebTools.bundle/.isrunning" ]; then
-    ISRUNNING=1
+    IsRunning=1
   fi
 
 
 # What were we asked to do
   case "$1" in
-    start)
+  start)
 
-      # Only do this if not 'loaded' (download and extract)
-      if [ ! $ISLOADED ]; then 
-        # Can't start, not installed/loaded correctly (must cleanup manually & retry)
-        exit 1
-      fi
+    WriteLog "Started"
 
-      # Now mark it as running
+    # Only do this if not 'loaded' (download and extract)
+    if [ $IsLoaded -eq 0 ]; then 
+      # Can't start, not installed/loaded correctly (must cleanup manually & retry)
+      WriteLog "ERROR: DSM says WebTools loaded but it is not loaded"
+      exit 1
+    fi
 
-Writelog Trying to start, marking as started
-      touch "$PLUGIN_DIR/WebTools.bundle/.isrunning"
+    # Now mark it as running
 
-      # Create the DSM shortcut (Puts the icon on the menu)
-      if [ ! -f "/usr/syno/synoman/webman/3rdparty/WebTools" ]
-      then
-        ln -s "/var/packages/WebTools/target/dsm_config/WebTools" /usr/syno/synoman/webman/3rdparty
-      fi
-      exit 0
+    touch "$PLUGIN_DIR/WebTools.bundle/.isrunning"
+
+    # Create the DSM shortcut (Puts the icon on the menu)
+    if [ ! -f "/usr/syno/synoman/webman/3rdparty/WebTools" ]; then
+      ln -s "/var/packages/WebTools/target/dsm_config/WebTools" /usr/syno/synoman/webman/3rdparty
+    fi
+      
+    exit 0
     ;;
 
   stop)
     
-    rm -f "$PLUGIN_DIR/WebTools.bundle/.isrunning"
 
+    WriteLog "Stopped"
+
+
+    rm -f "$PLUGIN_DIR/WebTools.bundle/.isrunning"
 
     # Remove the Start Menu link
     rm -f /usr/syno/synoman/webman/3rdparty/WebTools
@@ -129,23 +113,19 @@ Writelog Trying to start, marking as started
 
   status)
 
-    # Give the other processors time to catch up
-    sleep 2
+    if [ $IsRunning -eq 1 ]; then
+      exit 0;
 
-    if [ ! -f "$PLUGIN_DIR/WebTools.bundle/.isrunning" ]; then
-      WriteLog  Status:  WebTools is installed but not running.
-      exit 1  # is not running
     fi
 
-    exit 0  # is running
+    # Not Running
+    exit 1;
+
 
     ;;
  
   restart)
     $0 stop
-    if [ $? -ne 0]; then
-      exit $?
-    fi
 
     $0 start
     exit $?

@@ -1,13 +1,17 @@
 #!/bin/sh
 #
-# Preinstallation script for WebTools on Synology DSM
+# Preinstallation (preinst) script for WebTools on Synology DSM
 #
 # by ChuckPa, a Plex Community member
 #
 # Ver 1.0 - Initial release
   
 
-# Verify Plex is installed
+# Make sure the previous instance (if any) of Webtools.sc is gone
+/usr/syno/bin/servicetool --remove-configure-file --package WebTools.sc
+/usr/syno/bin/servicetool --remove-configure-file --build-in WebTools.sc
+
+# Verify Plex is installed before continuing
 
 # Check for Plex's username
 synouser --get plex
@@ -15,7 +19,7 @@ if [ $? -ne 0 ]
 then
     # No Plex user,  error
     echo "Plex Media Server must be installed prior to installing WebTools" \
-          >> $SYNOPKG_TEMP_LOGFILE
+          >> "$SYNOPKG_TEMP_LOGFILE"
     exit 1
 fi
 
@@ -25,7 +29,7 @@ if [ $? -ne 0 ]
 then
     # Plex share is missing, Previous install not valid
     echo "Plex Media Server Library missing.  Please reinstall Plex before continuing." \
-                                    >> $SYNOPKG_TEMP_LOGFILE
+                                    >> "$SYNOPKG_TEMP_LOGFILE"
     exit 1
 fi
 
@@ -40,11 +44,10 @@ PLUGIN_DIR="$PLEX_LIBRARY_PATH/Library/Application Support/Plex Media Server/Plu
 if [ ! -d "$PLUGIN_DIR"  ]; then
 
    echo "Plex's Library is corrupted or missing.  Please reinstall Plex and recreate the library."\
-         >> $SYNOPKG_TEMP_LOGFILE
+         >> "$SYNOPKG_TEMP_LOGFILE"
    exit 1
 
 fi
 
 
 exit 0
-    

@@ -1,0 +1,52 @@
+
+
+                WebTools Installer for Synology
+
+Release Notes:
+----------------
+
+Ver 1.3  - 29 April 2016
+
+   - Fixes:
+
+     issue: GHI #14    - Could not start.   Caused by DSM 6.0 update installer changes.  
+     issue: <internal> - Count not uninstall if package damaged / removed from Plex
+     issue: <internal> - DSM 6.0 firewall definition management cleaner
+     issue:            - WebTools would 'install' but fail to place WebTools.bundle 
+                         in Plex Plug-ins directory (download failure)
+     issue:            - Uninstalling WebTools from Package Center left WebTools in Plex.
+                         Changed to be 'Synology style' removal which is 'complete'.
+
+   - Installation changes;
+
+     1.  WebTools must have an active internet connection to complete the 
+         installation/upgrade and download the latest version of WebTools core modules
+
+   - Limitations:
+
+     1.  Occasionally Package Center sits and spins after installation complete.
+         Refreshing your browser window and opening Package Center
+         should show it's already installed.  If not,  Restart DSM.
+
+         This is due to Synology UI  - Browser interaction.  
+
+
+   - Improvements:
+
+     1.  Upgrade/update to current version without uninstalling first.
+         Caution:  Will force-upgrade WebTools utility in Plex (settings not altered)
+
+
+     2.  Downloading WebTools from GitHub more tolerant of network delay.  
+         Will retry 3 times (20 seconds each) before installation abort.
+
+         Package Center will show 'installing' during this time.  It will report
+         final status upon completion.
+
+     3.  WebTools.log contains more descriptive error messages
+
+
+   - Tested and verified on:
+
+     1.  DSM 5.2-5644 Update 5
+     2.  DSM 6.0-7321 Update 3

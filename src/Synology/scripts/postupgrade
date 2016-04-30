@@ -1,5 +1,7 @@
-#!/sh
+#!/bin/sh
+# PostUpgrade:
 
-# Nothing to do post upgrade.  Not supported at this time.  Must uninstall first
+rm -f /usr/local/webtools_upgrade
+rm -f /usr/local/plex_running
 
-return 0
+exit 0
