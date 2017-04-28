@@ -2,7 +2,7 @@
 #
 # postinst:
 #
-# WebTools - Initial download and firewall configuration settings installation for Synology
+# WebTools - Initial download and installation for Synology
 #
 #
 # by ChuckPa, a Plex Community member
@@ -11,6 +11,10 @@
 # Ver 1.1 - Processor independence update ('noarch')
 # Ver 1.2 - DSM 5.2 & 6.0 (U3) single version compatibility (Syno installer changes) + Upgrade-in-place
 #           Split Log (install) and Upgrade history log
+# Ver 1.4 - Update download to be more tolerant of slow internet (wget)
+#           If previous version of WebTools found, push to the side.  The user will handle
+#           Add support for DSM 6.1
+#
 
 
 # Put error messages in appropriate system log / communicate back to user
@@ -36,12 +40,10 @@ WriteLog() {
 #================================================================
 GetHostType() {
  
-  # define the main flags
  
   # Location of the needed executables if not in standard locations
-  CURL=/usr/bin/curl
+  CURL=/bin/curl
   TAR=/bin/tar
-  UNZIP=/usr/syno/bin/unzip
   
   # where the package is located
   PKGDIR=/var/packages/WebTools
@@ -49,7 +51,8 @@ GetHostType() {
  return 0
    
 }
-   
+
+#================================================================   
 GetDestination() {
    
   # On Synology,  the Pre-install script determines if Plex is present and ok to use ($PMS_DIR)
@@ -64,7 +67,7 @@ GetDestination() {
   LOGFILE="$PLUGIN_DIR/WebTools.log"
   
   # Which release.   Release info for WebTools on Github
-  RELEASE_LINK="https://api.github.com/repos/dagalufh/WebTools.bundle/releases/latest" 
+  RELEASE_LINK="https://api.github.com/repos/ukdtom/WebTools.bundle/releases/latest"
   
   }
   
@@ -92,8 +95,9 @@ downloadWT(){
   WriteLog "Updating from $DownloadURL" 
     
     
-  # Download the darn thingy
-  $CURL -Lsk $DownloadURL -m 15 -o "$PLUGIN_DIR/wt.tar.gz"
+  # Download the darn thingy   (time allowed is provided in arg 1)
+  rm -f "$PLUGIN_DIR/wt.tar.gz"
+  $CURL -Lsk $DownloadURL -m $1 -o "$PLUGIN_DIR/wt.tar.gz"
   if [ $? -ne 0 ]; then
     WriteLog Error $? while downloading WebTools
     WriteSyno ERROR $? while downloading WebTools
@@ -116,11 +120,19 @@ extractWT(){
       
 echo about to create WebTools.bundle dir
   # Create WebTools.bundle directory
-    mkdir -p "$PLUGIN_DIR/WebTools.bundle"
+    
+    # If WebTools.bundle already exists,  rename to be '.old'
+    if [ -d "$PLUGIN_DIR/WebTools.bundle" ]; then
+      mv -f "$PLUGIN_DIR/WebTools.bundle" "$PLUGIN_DIR/WebTools.bundle.old"
+    fi
+   
+
+    # Create WebTools.bundle directory
+    mkdir "$PLUGIN_DIR/WebTools.bundle"
     #WriteLog extractWT: mkdir $PLUGIN_DIR/WebTools.bundle
       
     if [ $? -ne 0 ]; then
-      MSG="ERROR: Could not create WebTools.bundle directory in \' $PLUGIN_DIR '\  \(err $? \) "
+      MSG="ERROR: Could not create WebTools.bundle directory in  $PLUGIN_DIR ( error $? )"
       WriteLog $MSG
       WriteSyno $MSG
       return 1
@@ -131,15 +143,15 @@ echo about to create WebTools.bundle dir
   $TAR -xf "$PLUGIN_DIR/wt.tar.gz" --overwrite --strip 1 -C "$PLUGIN_DIR/WebTools.bundle"
   if [ $? -ne 0 ]; then
       # unable to extract
-      MSG="ERROR:  Cannot extract wt.tar.gz to $PLUGIN_DIR/WebTools.bundle \(err $?\)"
+      MSG="ERROR:  Cannot extract wt.tar.gz to $PLUGIN_DIR/WebTools.bundle ( error $? )"
       WriteSyno "$MSG"
       WriteLog  "$MSG"
       return 1
   fi
         
+  # Cleanup downloaded wt.tar.gz
   rm -f "$PLUGIN_DIR/wt.tar.gz"
-  #    $UNZIP -oq "$PLUGIN_DIR/wt.zip" -d "$PLUGIN_DIR/WebTools.bundle"
-      
+
       
   # On Synology,  set ownership to plex, not root.
   chown -R plex:users "$PLUGIN_DIR/WebTools.bundle"
@@ -179,8 +191,9 @@ fi
 # Loop until retries exhausted or downloaded        
 until [ $Retries -gt 3 -o $Downloaded -eq 1 ]; do
         
-  # Try the download 
-  downloadWT
+  # Try the download, increasing the time allowed with each attempt.   At each attempt
+
+  downloadWT  `expr \( $Retries + 1 \) \* 30`
   
   # Check the return
   if [ $? -ne 0 ]; then
@@ -200,8 +213,8 @@ done
 if [ $Downloaded -eq 1 ]; then
   
   # Downloaded is true (no error)  Log it
-  WriteLog  "Download successful.  Proceeding with installation."
-  WriteSyno "WebTools download successful.  Proceeding with installation."
+  WriteLog  "Download successful.  Installation complete."
+  WriteSyno "WebTools download successful.  Installation complete."
   
 else
 
@@ -235,19 +248,9 @@ fi
   chown -R root:root   /var/packages/WebTools
       
       
-  # If upgrade, force remove firewall descriptions before upgrading (should already be gone)
-  if [ $IsUpgrade -eq 1 ]; then
-    WriteLog Removing previous firewall definitions
-    /usr/syno/bin/servicetool --remove-configure-file --package WebTools.sc
-  fi
+  #  Silently remove previous Webtools.sc if dangling
+  /usr/syno/bin/servicetool --remove-configure-file --package WebTools.sc
       
-  # Add description of firewall ports to DSM's firewall built-in application list
-  /usr/syno/bin/servicetool --install-configure-file --package /var/packages/WebTools/target/WebTools.sc
-      
-  if [ $? -eq 0 ]; then
-    WriteLog New firewall rules definition installed
-  fi
-
   WriteLog  WebTools installation complete.
   WriteLog  " "
         
