@@ -6,6 +6,10 @@
 [![master](https://img.shields.io/badge/master-stable-green.svg?maxAge=2592000)]()
 ![Maintenance](https://img.shields.io/badge/Maintained-Yes-green.svg)
 
+Note:
+Since development for WebTools.bundle has stopped, this project has stopped as well
+As such, no more updates/fixes will take place
+
 
 Easy Installer for WebTools
 
